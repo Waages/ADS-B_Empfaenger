@@ -26,8 +26,7 @@ lon = 8.84			# Eigene Position Längengrad
 course = 0			# Eigener Kurs / Winkel zum Nordpol
 deadtime1 = 10			# Zeit seit dem letzten Signal, ab wann markiert wird
 deadtime2 = 30			# ... , ab wann nicht mehr anzeigen (Dump1090 intern ab 300s)
-scale = 0.5			# Maßstab (km pro Pixel)
-
+scale = 0.1			# Maßstab (km pro Pixel)
 
 # Bildschirmmaße definieren
 screen_width = 800
@@ -124,13 +123,23 @@ def getPixely(planedist, planeangl):
 		y = (screen_height / -2)
 	return y
 
+# Flugzeugsymbol zeichnen
+def drawPlane(coords, color, dir, size):
+	Planefont  = pygame.font.Font('/home/adsbpi/ADS-B_Empfaenger/fa-solid-900.ttf', size)
+	Planetext = Planefont.render(chr(0xE22D) , True, color)
+	Planetext_rect = Planetext.get_rect()
+	Planetext_rect.center = coords
+	screen.blit(Planetext, Planetext_rect)
+	return
+
 # Fenster erstellen und Fenstertitel vergeben
 screen = pygame.display.set_mode(screen , pygame.RESIZABLE)
-pygame.display.set_caption('Hier steht Text')
+pygame.display.set_caption('ADS-B Empfänger Version 1')
 
 # Font definieren
 font = pygame.font.Font(None, 27)
 fontS = pygame.font.Font(None, 20)
+
 
 # Quit-Button Eigenschaften
 button_width = Menuebreite
@@ -146,6 +155,8 @@ pygame.display.update()
 #print("Testabstand: ",Abstand(lat,lon,(lat-1),(lon-1)))
 #print("Testwinkel: ",Winkel(lat,lon,(lat-1),(lon-1)))
 #print("X: ", getPixelx(20, 45), "Y: ",getPixely(20,45))
+
+#print(fa.icons['thumbs-up'])
 
 running = True
 while running:
@@ -182,7 +193,7 @@ while running:
 	screen.blit(text, text_rect)
 
 	# Eigene Position darstellen
-	pygame.draw.circle(screen, green, (centerpos) , 10)
+	drawPlane(centerpos, green, 0 ,40)
 
 	# Dump1090 auslesen
 	response = urllib.request.urlopen(url)
