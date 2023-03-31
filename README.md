@@ -12,6 +12,7 @@ Aaron Schmidt
 
 ## ToDo´s
 	- Radarringe
+	- Check GPS-Koordinaten S/W
 	- Bugfix Rotation Symbole
 	- Eigenen hex-Code ignorieren
 		- manuelle eingabemöglichkeit
