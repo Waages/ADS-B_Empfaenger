@@ -127,6 +127,7 @@ def getPixely(planedist, planeangl):
 def drawPlane(coords, color, dir, size):
 	Planefont  = pygame.font.Font('/home/adsbpi/ADS-B_Empfaenger/fa-solid-900.ttf', size)
 	Planetext = Planefont.render(chr(0xE22D) , True, color)
+	Planetext = pygame.transform.rotate(Planetext, dir)
 	Planetext_rect = Planetext.get_rect()
 	Planetext_rect.center = coords
 	screen.blit(Planetext, Planetext_rect)
@@ -155,8 +156,6 @@ pygame.display.update()
 #print("Testabstand: ",Abstand(lat,lon,(lat-1),(lon-1)))
 #print("Testwinkel: ",Winkel(lat,lon,(lat-1),(lon-1)))
 #print("X: ", getPixelx(20, 45), "Y: ",getPixely(20,45))
-
-#print(fa.icons['thumbs-up'])
 
 running = True
 while running:
@@ -215,7 +214,7 @@ while running:
 					planecolor = gray
 				else:
 					planecolor = black
-				pygame.draw.circle(screen, planecolor, (planepixelpos) , 10)
+				drawPlane((planepixelpos), planecolor, aircraft.get('track',0), 30)
 				screen.blit(fontS.render(aircraft.get('hex'), True, black), tuple(map(sum, zip(planepixelpos,(10,-10)))))
 
 #	screen.blit(font.render(("Flugzeuge:", planedetec_raw), True, black, (19, (screen_height - 40))))
