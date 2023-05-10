@@ -16,7 +16,7 @@ url = "http://localhost:8080/data/aircraft.json"
 pygame.init()
 
 # FÜR PR0GRAMMIEREN IMMER FALSE
-Vollbild = False
+Vollbild = True
 
 # Variablen
 gps_thread_running = True	# Läuft der GPS-Thread
@@ -56,7 +56,6 @@ centerposx = (screen_width - Menuebreite) / 2 + 0
 centerposy = screen_height / 2 + 0
 centerpos = (int(centerposx), int(centerposy))
 
-
 # Farben definieren
 white = (255, 255, 255)
 gray = (128, 128 ,128)
@@ -70,11 +69,44 @@ mauszeit = 10
 last_mouse_movement = time.time()
 pygame.mouse.set_visible(True)
 
+# Fenster erstellen und Fenstertitel vergeben
+if Vollbild:
+	screen = pygame.display.set_mode(screen , pygame.FULLSCREEN)
+else:
+	screen = pygame.display.set_mode(screen , pygame.RESIZABLE)
+pygame.display.set_caption('ADS-B Empfänger Version 1')
+
+# Schriftarten definieren
+font = pygame.font.Font(None, 27)
+fontS = pygame.font.Font(None, 20)
+Iconfont = pygame.font.Font('/home/adsbpi/ADS-B_Empfaenger/fa-solid-900.ttf', 40)
+
+# Zoom-Button Eigenschaften
+zoomI_btn_width = Menuebreite
+zoomO_btn_width = zoomI_btn_width
+zoomI_btn_height = 70
+zoomO_btn_height = zoomI_btn_height
+zoomI_btn_x = screen_width - zoomI_btn_width
+zoomO_btn_x = screen_width - zoomO_btn_width
+zoomI_btn_y = screen_height - zoomI_btn_height
+zoomO_btn_y = screen_height - zoomO_btn_height - zoomI_btn_height - 5
+
+# Info-Button Eigenschaften
+info_btn_width = Menuebreite
+info_btn_height = zoomI_btn_height
+info_btn_x = screen_width - info_btn_width
+info_btn_y = zoomO_btn_y - info_btn_height - 5
+
+# Hide-Button Eigenschaften
+hide_btn_width = Menuebreite
+hide_btn_height = zoomI_btn_height
+hide_btn_x = screen_width - hide_btn_width
+hide_btn_y = info_btn_y - hide_btn_height - 5
 
 
 ###--FUNKTIONEN--------------------
 
-# GPS initialisieren
+# GPS initialisieren und Starten des Threads
 gps = Serial('/dev/ttyS0', 9600)
 
 def read_gps_data():
@@ -88,22 +120,18 @@ def read_gps_data():
 	global course
 	while gps_thread_running:	
 		line = gps.readline().decode('utf-8')
-#		print(line)
 		if line.startswith('$GPGGA'):
 			data = line.split(',')
 			if data[2]:
 				gps_signal = True
 				lat = float(data[2][:2]) + float(data[2][2:]) / 60
 				lon = float(data[4][:3]) + float(data[4][3:]) / 60
-#				print("GPS")
 			else:
-#				print("Kein GPS-Signal")
 				gps_signal = False
 			if data[7]:
 				sats = int(data[7])
 			else:
 				sats = 99
-#			print(sats)
 			if data[9]:
 				alt = int(float(data[9]))
 		if line.startswith('$GPVTG'):
@@ -118,7 +146,6 @@ gps_thread = threading.Thread(target=read_gps_data)
 gps_thread.start()
 
 # Abstandsbestimmungsfunktion anhand der Haversine Formel
-
 def Abstand(lat, lon, planelat, planelon):
 	R = 6371	# Erdradius in Kilometern
 	phi1 = math.radians(lat)
@@ -129,7 +156,6 @@ def Abstand(lat, lon, planelat, planelon):
 	c = 2* math.atan2(math.sqrt(a), math.sqrt(1-a))
 	d = R * c
 	return d
-
 
 # Winkelbestimmung 
 def Winkel(lat, lon, planelat, planelon):
@@ -148,7 +174,6 @@ def getPixelx(planedist, planeangl):
 	angl = planeangl - maprotation
 	dist = planedist / scale
 	x = int(round(math.sin(math.radians(angl)) * dist))
-#	print("AbsolutX:", abs(x))
 	if x > ((screen_width - Menuebreite) / 2 - Randbreite - 10):
 		overedge = True
 		x = ((screen_width - Menuebreite) / 2 - Randbreite - 10)
@@ -162,7 +187,6 @@ def getPixely(planedist, planeangl):
 	angl = planeangl - maprotation
 	dist = planedist / scale
 	y = int(round(math.cos(math.radians(angl)) * dist))
-#	print("AbsolutY:", abs(y))
 	if y > (screen_height / 2 - Randbreite):
 		overedge = True
 		y = (screen_height / 2 - Randbreite)
@@ -202,7 +226,6 @@ def calcKompass():
 	global Radiuskm
 	global Radiuspx
 	maxGef = False
-	print("Radius berechnet")
 	for wert in Teiler:
 		if (wert/scale) < maxRad and maxGef == False:
 			Radiuskm = wert
@@ -225,53 +248,12 @@ def drawInfo(planepos,info1,info2,info3,info4):
 		screen.blit(fontS.render(str(info2), True, black), tuple(map(sum, zip(planepos,(-20,33)))))
 		screen.blit(fontS.render(str(info3), True, black), tuple(map(sum, zip(planepos,(-20,46)))))
 		screen.blit(fontS.render(str(info4), True, black), tuple(map(sum, zip(planepos,(-20,59)))))
-
 	return
 
-# Fenster erstellen und Fenstertitel vergeben
-if Vollbild:
-	screen = pygame.display.set_mode(screen , pygame.FULLSCREEN)
-else:
-	screen = pygame.display.set_mode(screen , pygame.RESIZABLE)
-pygame.display.set_caption('ADS-B Empfänger Version 1')
-
-# Font definieren
-font = pygame.font.Font(None, 27)
-fontS = pygame.font.Font(None, 20)
-Iconfont = pygame.font.Font('/home/adsbpi/ADS-B_Empfaenger/fa-solid-900.ttf', 40)
-
-# Zoom-Button Eigenschaften
-zoomI_btn_width = Menuebreite
-zoomO_btn_width = zoomI_btn_width
-zoomI_btn_height = 70
-zoomO_btn_height = zoomI_btn_height
-zoomI_btn_x = screen_width - zoomI_btn_width
-zoomO_btn_x = screen_width - zoomO_btn_width
-zoomI_btn_y = screen_height - zoomI_btn_height
-zoomO_btn_y = screen_height - zoomO_btn_height - zoomI_btn_height - 5
-
-# Info-Button Eigenschaften
-info_btn_width = Menuebreite
-info_btn_height = zoomI_btn_height
-info_btn_x = screen_width - info_btn_width
-info_btn_y = zoomO_btn_y - info_btn_height - 5
-
-# Hide-Button Eigenschaften
-hide_btn_width = Menuebreite
-hide_btn_height = zoomI_btn_height
-hide_btn_x = screen_width - hide_btn_width
-hide_btn_y = info_btn_y - hide_btn_height - 5
-
-#time.sleep(1.5)
-
 pygame.display.update()
-#print("123")
-
-#print("Testabstand: ",Abstand(lat,lon,(lat-1),(lon-1)))
-#print("Testwinkel: ",Winkel(lat,lon,(lat-1),(lon-1)))
-#print("X: ", getPixelx(20, 45), "Y: ",getPixely(20,45))
 touchsize = 40
 OwnPlanetype = 0
+
 running = True
 while running:
 	# Events überprüfen
@@ -295,13 +277,11 @@ while running:
 				if scale > 2:
 					scale = 2
 			if info_btn_x <= mouse_pos[0] <= info_btn_x + info_btn_width and info_btn_y <= mouse_pos[1] <= info_btn_y + info_btn_height:
-				print("Info")
 				if Info:
 					Info = False
 				else:
 					Info = True
 			if hide_btn_x <= mouse_pos[0] <= hide_btn_x + hide_btn_width and hide_btn_y <= mouse_pos[1] <= hide_btn_y + hide_btn_height:
-				print("Hide")
 				if Hide:
 					Hide = False
 				else:
@@ -310,6 +290,7 @@ while running:
 				OwnPlanetype += 1
 				if OwnPlanetype > 6:
 					OwnPlanetype = 0
+
 	# Maus ausblenden
 	if time.time() - last_mouse_movement > mauszeit:
 		pygame.mouse.set_visible(False)
@@ -337,7 +318,6 @@ while running:
 	screen.blit(coursetext, (Menuekante, 80))
 	screen.blit(speedtext, (Menuekante, 100))
 	screen.blit(alttext, (Menuekante, 120))
-
 
 	# GPS-Status anzeigen
 	if gps_signal:
@@ -393,17 +373,16 @@ while running:
 			if 'lat' in aircraft:
 				planedetec_loc += 1
 				overedge = False
+				isGround = False
 				planelat = aircraft.get('lat')
 				planelon = aircraft.get('lon')
 				planealt = aircraft.get('altitude')
-				isGround = False
 				if isinstance(planealt,(int)) == False:
 					if planealt == "ground":
 						isGround = True
 					planealt = 0
 				planedist = Abstand(lat, lon, planelat, planelon)
 				planeangl = Winkel(lat, lon, planelat, planelon)
-#				print("Abstand: ",planedist, "Winkel: ", planeangl)
 				planepixelpos = (int(centerposx + getPixelx(planedist, planeangl)), int(centerposy - getPixely(planedist, planeangl)))
 				if aircraft.get('seen_pos') > deadtime1:
 					planecolor = gray
@@ -429,22 +408,17 @@ while running:
 						info4 = str(aircraft.get('speed')) + " kt"
 					drawInfo(planepixelpos, info1, info2, info3, info4)
 				drawPlane((planepixelpos), planecolor, aircraft.get('track',0), planesize, 0)
-#				screen.blit(fontS.render(str(round(planedist)), True, black), tuple(map(sum, zip(planepixelpos,(10,-30)))))
 
-	pygame.draw.rect(screen, white, (3,screen_height-24,90,17))
+	# Debug-Anzeige in Menueleiste
 	debugtext = fontS.render(("R" + str(planedetec_raw) + " / L" + str(planedetec_loc) + " / S" + str(sats)), True, black)
 	screen.blit(debugtext, (Menuekante, hide_btn_y-15))
 
-#	course += .5
-
-#	print("Anzahl: ",planedetec_raw," Davon Loc: ", planedetec_loc)
-#	time.sleep(1)
 	pygame.display.update()
 	pygame.time.Clock().tick(60)
 
+# Abbruchroutine
 p.terminate()
 gps_thread_running = False
 gps_thread.join()
-print("Normales Ende")
 pygame.quit()
 sys.exit()
