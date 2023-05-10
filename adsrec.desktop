@@ -1,0 +1,5 @@
+[Desktop Entry]
+Name=adsrec
+Exec=bash -c 'python3 "/home/adsbpi/ADS-B_Empfaenger/adsb_receiver.py" > /tmp/testlog 2>&1'
+Type=Application
+Terminal=True

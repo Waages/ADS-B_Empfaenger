@@ -15,7 +15,7 @@ url = "http://localhost:8080/data/aircraft.json"
 # Pygame initialisiern
 pygame.init()
 
-# FÜR PROGRAMMIEREN IMMER FALSE
+# FÜR PR0GRAMMIEREN IMMER FALSE
 Vollbild = False
 
 # Variablen
@@ -23,8 +23,8 @@ gps_thread_running = True	# Läuft der GPS-Thread
 gps_signal = False		# GPS-Signalempfang
 planedetec_raw = 0		# Anzahl an detektierter Flugzeuge
 planedetec_loc = 0		# Anzahl an detek. Flug. mit Koordinaten
-lat = 48.55			# Eigene Position Breitengrad
-lon = 8.84			# Eigene Position Längengrad
+lat = 48.8			# Eigene Position Breitengrad
+lon = 9.2			# Eigene Position Längengrad
 sats = 0			# Anzahl GPS-Satelliten in Verwendung
 alt = 100			# GPS-Antennenhöhe über NN in m
 speed = 0			# GPS-Geschwindigkeit in kt
@@ -36,9 +36,9 @@ scale = 0.1			# Maßstab (km pro Pixel)
 scale_alt = 100.0		# Zur Detektion, ob Kompass neu berechnet werden muss
 
 Radio = True			# Ob Funkrufname angezeigt werden soll, sonst ICAO-Code
-Info = False			# Ob Weitere Informationen (Höhe, Course, Speed) angezeigt werden
+Info = True			# Ob Weitere Informationen (Höhe, Course, Speed) angezeigt werden
 Hide = False			# Ob ab großer Höhendifferenz nur vermindert dargestellt wird
-deltaH = 10000			# Höhendifferenzschwelle in ft für Hide
+deltaH = 2000			# Höhendifferenzschwelle in ft für Hide
 
 # Bildschirmmaße definieren
 screen_width = 800
@@ -66,7 +66,7 @@ red = (255, 0, 0)
 green = (0, 128, 0) 
 
 # Maus ausblenden
-mauszeit = .3
+mauszeit = 10
 last_mouse_movement = time.time()
 pygame.mouse.set_visible(True)
 
@@ -222,9 +222,9 @@ def drawKompass():
 def drawInfo(planepos,info1,info2,info3,info4):
 	screen.blit(fontS.render(str(info1), True, black), tuple(map(sum, zip(planepos,(-20,20)))))
 	if info2:
-		screen.blit(fontS.render(str(info2), True, black), tuple(map(sum, zip(planepos,(-20,30)))))
-		screen.blit(fontS.render(str(info3), True, black), tuple(map(sum, zip(planepos,(-20,40)))))
-		screen.blit(fontS.render(str(info4), True, black), tuple(map(sum, zip(planepos,(-20,50)))))
+		screen.blit(fontS.render(str(info2), True, black), tuple(map(sum, zip(planepos,(-20,33)))))
+		screen.blit(fontS.render(str(info3), True, black), tuple(map(sum, zip(planepos,(-20,46)))))
+		screen.blit(fontS.render(str(info4), True, black), tuple(map(sum, zip(planepos,(-20,59)))))
 
 	return
 
@@ -395,6 +395,12 @@ while running:
 				overedge = False
 				planelat = aircraft.get('lat')
 				planelon = aircraft.get('lon')
+				planealt = aircraft.get('altitude')
+				isGround = False
+				if isinstance(planealt,(int)) == False:
+					if planealt == "ground":
+						isGround = True
+					planealt = 0
 				planedist = Abstand(lat, lon, planelat, planelon)
 				planeangl = Winkel(lat, lon, planelat, planelon)
 #				print("Abstand: ",planedist, "Winkel: ", planeangl)
@@ -403,7 +409,7 @@ while running:
 					planecolor = gray
 				else:
 					planecolor = black
-				if overedge or (Hide and aircraft.get('altitude') > (alt*3.28 + deltaH )):
+				if overedge or (Hide and planealt > (alt*3.28 + deltaH )):
 					planesize = 20
 				else:
 					planesize = 30
@@ -415,15 +421,19 @@ while running:
 					else:
 						info1 = aircraft.get('hex')
 					if Info:
-						info2 = str(aircraft.get('altitude')) + " ft"
+						if isGround:
+							info2 = "GROUND"
+						else:
+							info2 = str(planealt) + " ft"
 						info3 = str(aircraft.get('track')) + " °"
 						info4 = str(aircraft.get('speed')) + " kt"
 					drawInfo(planepixelpos, info1, info2, info3, info4)
 				drawPlane((planepixelpos), planecolor, aircraft.get('track',0), planesize, 0)
 #				screen.blit(fontS.render(str(round(planedist)), True, black), tuple(map(sum, zip(planepixelpos,(10,-30)))))
 
+	pygame.draw.rect(screen, white, (3,screen_height-24,90,17))
 	debugtext = fontS.render(("R" + str(planedetec_raw) + " / L" + str(planedetec_loc) + " / S" + str(sats)), True, black)
-	screen.blit(debugtext, (5, screen_height-22))
+	screen.blit(debugtext, (Menuekante, hide_btn_y-15))
 
 #	course += .5
 
